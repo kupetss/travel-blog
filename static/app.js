@@ -20,11 +20,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 messageEl.textContent = data.message;
                 messageEl.className = data.success ? 'alert alert-success' : 'alert alert-danger';
                 
-                if (data.success) {
+                if (data.success && data.redirect) {
                     setTimeout(() => {
-                        window.location.href = '/index.html';
+                        window.location.href = data.redirect;
                     }, 1000);
                 }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                const messageEl = document.getElementById('message');
+                messageEl.textContent = 'An error occurred';
+                messageEl.className = 'alert alert-danger';
             });
         });
     }
@@ -55,6 +61,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         window.location.href = '/login.html';
                     }, 1000);
                 }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                const messageEl = document.getElementById('message');
+                messageEl.textContent = 'An error occurred';
+                messageEl.className = 'alert alert-danger';
             });
         });
     }
