@@ -19,51 +19,19 @@ const auth = {
             return response;
         } catch (error) {
             console.error('Fetch error:', error);
+            showMessage('Network error', false);
             return null;
         }
     }
 };
 
-// Common function to handle form submission
-async function handleFormSubmit(e, url, successCallback) {
-    e.preventDefault();
-    
-    const form = e.target;
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const originalText = submitBtn.textContent;
-    
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Processing...';
-    
-    try {
-        const formData = new FormData(form);
-        const response = await fetch(url, {
-            method: 'POST',
-            body: formData
-        });
-
-        const data = await response.json();
-        
-        if (data.success) {
-            if (successCallback) successCallback(data);
-        } else {
-            showMessage(data.message, false);
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        showMessage('An error occurred', false);
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
-    }
-}
-
+// Show message function
 function showMessage(message, isSuccess) {
     const messageEl = document.getElementById('message');
     if (!messageEl) return;
     
     messageEl.textContent = message;
-    messageEl.className = isSuccess ? 'alert alert-success' : 'alert alert-danger';
+    messageEl.className = `alert alert-${isSuccess ? 'success' : 'danger'}`;
     messageEl.style.display = 'block';
     
     setTimeout(() => {
@@ -71,14 +39,61 @@ function showMessage(message, isSuccess) {
     }, 5000);
 }
 
+// Toggle loading state
+function setLoading(element, isLoading) {
+    if (isLoading) {
+        element.disabled = true;
+        const originalText = element.dataset.originalText || element.textContent;
+        element.dataset.originalText = originalText;
+        element.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...`;
+    } else {
+        element.disabled = false;
+        if (element.dataset.originalText) {
+            element.textContent = element.dataset.originalText;
+        }
+    }
+}
+
 // Login form
 const loginForm = document.getElementById('loginForm');
 if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
-        await handleFormSubmit(e, '/api/login', (data) => {
-            auth.setToken(data.token);
-            window.location.href = data.redirect || '/profile.html';
-        });
+        e.preventDefault();
+        
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const submitBtn = loginForm.querySelector('button[type="submit"]');
+        
+        setLoading(submitBtn, true);
+        
+        try {
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, password }),
+            });
+
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.message || 'Login failed');
+            }
+
+            if (data.success) {
+                auth.setToken(data.token);
+                showMessage('Login successful! Redirecting...', true);
+                setTimeout(() => {
+                    window.location.href = data.redirect || '/profile.html';
+                }, 1000);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showMessage(error.message, false);
+        } finally {
+            setLoading(submitBtn, false);
+        }
     });
 }
 
@@ -86,12 +101,41 @@ if (loginForm) {
 const registerForm = document.getElementById('registerForm');
 if (registerForm) {
     registerForm.addEventListener('submit', async (e) => {
-        await handleFormSubmit(e, '/api/register', (data) => {
-            showMessage('Registration successful! Please login', true);
-            setTimeout(() => {
-                window.location.href = '/login.html';
-            }, 1500);
-        });
+        e.preventDefault();
+        
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const submitBtn = registerForm.querySelector('button[type="submit"]');
+        
+        setLoading(submitBtn, true);
+        
+        try {
+            const response = await fetch('/api/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, password }),
+            });
+
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.message || 'Registration failed');
+            }
+
+            if (data.success) {
+                showMessage('Registration successful! Please login', true);
+                setTimeout(() => {
+                    window.location.href = '/login.html';
+                }, 1500);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showMessage(error.message, false);
+        } finally {
+            setLoading(submitBtn, false);
+        }
     });
 }
 
@@ -122,6 +166,7 @@ if (document.getElementById('profilePhoto')) {
             }
         } catch (error) {
             console.error('Failed to load profile:', error);
+            showMessage('Failed to load profile', false);
         }
     };
 
@@ -133,10 +178,13 @@ if (document.getElementById('profilePhoto')) {
             return;
         }
 
-        const formData = new FormData();
-        formData.append('photo', fileInput.files[0]);
-
+        const btn = document.getElementById('uploadBtn');
+        setLoading(btn, true);
+        
         try {
+            const formData = new FormData();
+            formData.append('photo', fileInput.files[0]);
+
             const response = await auth.authFetch('/api/upload-photo', {
                 method: 'POST',
                 body: formData
@@ -156,6 +204,8 @@ if (document.getElementById('profilePhoto')) {
         } catch (error) {
             console.error('Error:', error);
             showMessage(error.message, false);
+        } finally {
+            setLoading(btn, false);
         }
     });
 
@@ -163,10 +213,41 @@ if (document.getElementById('profilePhoto')) {
     const saveProfileForm = document.getElementById('saveProfileForm');
     if (saveProfileForm) {
         saveProfileForm.addEventListener('submit', async (e) => {
-            await handleFormSubmit(e, '/api/save-profile', () => {
-                showMessage('Profile saved successfully!', true);
-                loadProfile();
-            });
+            e.preventDefault();
+            
+            const submitBtn = saveProfileForm.querySelector('button[type="submit"]');
+            setLoading(submitBtn, true);
+            
+            try {
+                const profileData = {
+                    status: document.getElementById('status').value,
+                    birth_year: parseInt(document.getElementById('birthYear').value) || 0,
+                    about: document.getElementById('about').value
+                };
+
+                const response = await auth.authFetch('/api/save-profile', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(profileData)
+                });
+
+                if (!response) return;
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage('Profile saved successfully!', true);
+                } else {
+                    throw new Error(data.message || 'Failed to save profile');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage(error.message, false);
+            } finally {
+                setLoading(submitBtn, false);
+            }
         });
     }
 

@@ -53,7 +53,7 @@ func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tokenString := r.Header.Get("Authorization")
 		if tokenString == "" {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			sendJSONError(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
@@ -62,19 +62,28 @@ func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		})
 
 		if err != nil || !token.Valid {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			sendJSONError(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
 		claims, ok := token.Claims.(*Claims)
 		if !ok {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			sendJSONError(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
 		ctx := context.WithValue(r.Context(), "claims", claims)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}
+}
+
+func sendJSONError(w http.ResponseWriter, message string, statusCode int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	json.NewEncoder(w).Encode(Response{
+		Success: false,
+		Message: message,
+	})
 }
 
 func initDB() {
@@ -118,20 +127,24 @@ func initDB() {
 }
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
-	var user User
+	var user struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		http.Error(w, "Invalid request", http.StatusBadRequest)
+		sendJSONError(w, "Invalid request format", http.StatusBadRequest)
 		return
 	}
 
 	if len(user.Username) < 4 || len(user.Password) < 6 {
-		json.NewEncoder(w).Encode(Response{false, "Username must be at least 4 chars and password 6 chars"})
+		sendJSONError(w, "Username must be at least 4 chars and password 6 chars", http.StatusBadRequest)
 		return
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		http.Error(w, "Server error", http.StatusInternalServerError)
+		sendJSONError(w, "Server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -142,36 +155,53 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
-			json.NewEncoder(w).Encode(Response{false, "Username already exists"})
+			sendJSONError(w, "Username already exists", http.StatusConflict)
 			return
 		}
-		http.Error(w, "Server error", http.StatusInternalServerError)
+		sendJSONError(w, "Server error", http.StatusInternalServerError)
 		return
 	}
 
-	json.NewEncoder(w).Encode(Response{true, "User registered successfully"})
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(Response{
+		Success: true,
+		Message: "User registered successfully",
+	})
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
-	var user User
+	var user struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		http.Error(w, "Invalid request", http.StatusBadRequest)
+		sendJSONError(w, "Invalid request format", http.StatusBadRequest)
 		return
 	}
 
-	var dbUser User
+	var dbUser struct {
+		ID       int
+		Username string
+		Password string
+	}
+
 	err := db.QueryRow(
 		"SELECT id, username, password FROM users WHERE username = ?",
 		user.Username,
 	).Scan(&dbUser.ID, &dbUser.Username, &dbUser.Password)
 
 	if err != nil {
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		if err == sql.ErrNoRows {
+			sendJSONError(w, "Invalid username or password", http.StatusUnauthorized)
+			return
+		}
+		sendJSONError(w, "Server error", http.StatusInternalServerError)
 		return
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(user.Password)); err != nil {
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		sendJSONError(w, "Invalid username or password", http.StatusUnauthorized)
 		return
 	}
 
@@ -185,17 +215,21 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString([]byte(JWTSecret))
 	if err != nil {
-		http.Error(w, "Server error", http.StatusInternalServerError)
+		sendJSONError(w, "Server error", http.StatusInternalServerError)
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(struct {
 		Response
 		Token    string `json:"token"`
 		UserID   int    `json:"user_id"`
 		Redirect string `json:"redirect"`
 	}{
-		Response: Response{true, "Login successful"},
+		Response: Response{
+			Success: true,
+			Message: "Login successful",
+		},
 		Token:    tokenString,
 		UserID:   dbUser.ID,
 		Redirect: "/profile.html",
@@ -205,7 +239,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 func profileHandler(w http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value("claims").(*Claims)
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		sendJSONError(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
@@ -216,7 +250,7 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 	).Scan(&profile.Status, &profile.BirthYear, &profile.About)
 
 	if err != nil {
-		http.Error(w, "Profile not found", http.StatusNotFound)
+		sendJSONError(w, "Profile not found", http.StatusNotFound)
 		return
 	}
 
@@ -230,25 +264,34 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 		profile.Photo = base64.StdEncoding.EncodeToString(photoData)
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(struct {
 		Response
 		Profile Profile `json:"profile"`
 	}{
-		Response: Response{true, "Profile loaded"},
-		Profile:  profile,
+		Response: Response{
+			Success: true,
+			Message: "Profile loaded",
+		},
+		Profile: profile,
 	})
 }
 
 func saveProfileHandler(w http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value("claims").(*Claims)
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		sendJSONError(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	var profile Profile
+	var profile struct {
+		Status    string `json:"status"`
+		BirthYear int    `json:"birth_year"`
+		About     string `json:"about"`
+	}
+
 	if err := json.NewDecoder(r.Body).Decode(&profile); err != nil {
-		http.Error(w, "Invalid request", http.StatusBadRequest)
+		sendJSONError(w, "Invalid request format", http.StatusBadRequest)
 		return
 	}
 
@@ -258,37 +301,46 @@ func saveProfileHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
-		http.Error(w, "Failed to save profile", http.StatusInternalServerError)
+		sendJSONError(w, "Failed to save profile", http.StatusInternalServerError)
 		return
 	}
 
-	json.NewEncoder(w).Encode(Response{true, "Profile saved successfully"})
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(Response{
+		Success: true,
+		Message: "Profile saved successfully",
+	})
 }
 
 func uploadPhotoHandler(w http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value("claims").(*Claims)
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		sendJSONError(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Ограничиваем размер файла до 5MB
+	err := r.ParseMultipartForm(5 << 20)
+	if err != nil {
+		sendJSONError(w, "File too large (max 5MB)", http.StatusBadRequest)
 		return
 	}
 
 	file, _, err := r.FormFile("photo")
 	if err != nil {
-		http.Error(w, "No photo uploaded", http.StatusBadRequest)
+		sendJSONError(w, "No photo uploaded", http.StatusBadRequest)
 		return
 	}
 	defer file.Close()
 
-	// Ограничиваем размер файла 5MB
-	r.ParseMultipartForm(5 << 20)
 	photoData, err := io.ReadAll(file)
 	if err != nil {
-		http.Error(w, "Failed to read photo", http.StatusInternalServerError)
+		sendJSONError(w, "Failed to read photo", http.StatusInternalServerError)
 		return
 	}
 
 	if len(photoData) == 0 {
-		http.Error(w, "Empty photo", http.StatusBadRequest)
+		sendJSONError(w, "Empty photo", http.StatusBadRequest)
 		return
 	}
 
@@ -298,16 +350,20 @@ func uploadPhotoHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
-		http.Error(w, "Failed to save photo", http.StatusInternalServerError)
+		sendJSONError(w, "Failed to save photo", http.StatusInternalServerError)
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(struct {
 		Response
 		Photo string `json:"photo"`
 	}{
-		Response: Response{true, "Photo uploaded successfully"},
-		Photo:    base64.StdEncoding.EncodeToString(photoData),
+		Response: Response{
+			Success: true,
+			Message: "Photo uploaded successfully",
+		},
+		Photo: base64.StdEncoding.EncodeToString(photoData),
 	})
 }
 
