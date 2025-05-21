@@ -3,26 +3,17 @@ package main
 import (
 	"database/sql"
 	"log"
-	"net/http"
 	"travel-blog/handlers"
 
 	"github.com/gin-gonic/gin"
 	_ "modernc.org/sqlite"
 )
 
-func authMiddleware() gin.HandlerFunc {
+func noCache() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if c.Request.URL.Path == "/register" || c.Request.URL.Path == "/login" {
-			c.Next()
-			return
-		}
-
-		_, err := c.Cookie("user_id")
-		if err != nil && c.Request.URL.Path != "/" {
-			c.Redirect(http.StatusFound, "/login")
-			c.Abort()
-			return
-		}
+		c.Header("Cache-Control", "no-cache, no-store, must-revalidate")
+		c.Header("Pragma", "no-cache")
+		c.Header("Expires", "0")
 		c.Next()
 	}
 }
@@ -30,7 +21,7 @@ func authMiddleware() gin.HandlerFunc {
 func main() {
 	db, err := sql.Open("sqlite", "blog.db")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Failed to open database:", err)
 	}
 	defer db.Close()
 
@@ -52,11 +43,11 @@ func main() {
 		);
 	`)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Failed to create tables:", err)
 	}
 
 	r := gin.Default()
-	r.Use(authMiddleware()) // Добавляем middleware
+	r.Use(noCache()) // Добавляем middleware
 	r.LoadHTMLGlob("templates/*.html")
 
 	// Маршруты авторизации

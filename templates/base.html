@@ -84,15 +84,13 @@
 </head>
 <body>
    <nav>
-    <a href="/">Home</a>
+    <a href="/?_={{.Timestamp}}">Home</a>
     {{if .UserID}}
-        | <a href="/post">New Post</a>
-        | <form action="/logout" method="POST" style="display:inline">
-            <button type="submit" style="background:none;border:none;color:#007bff;cursor:pointer;padding:0;font:inherit">Logout</button>
-        </form>
+        | <a href="/post?_={{.Timestamp}}">New Post</a>
+        | <a href="/logout?_={{.Timestamp}}">Logout</a>
     {{else}}
-        | <a href="/login">Login</a>
-        | <a href="/register">Register</a>
+        | <a href="/login?_={{.Timestamp}}">Login</a>
+        | <a href="/register?_={{.Timestamp}}">Register</a>
     {{end}}
 </nav>
     {{block "content" .}}{{end}}
