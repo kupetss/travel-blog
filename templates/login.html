@@ -1,22 +1,8 @@
-{{template "base.html" .}}
-
-{{define "content"}}
-    <h1>Login</h1>
-    {{if .error}}
-        <div style="color: red; margin-bottom: 15px;">
-            {{.error}}
-        </div>
-    {{end}}
-    <form method="POST" action="/login">
-        <div>
-            <label>Username:</label>
-            <input type="text" name="username" required>
-        </div>
-        <div>
-            <label>Password:</label>
-            <input type="password" name="password" required>
-        </div>
-        <button type="submit">Login</button>
-    </form>
-    <p>Don't have an account? <a href="/register">Register here</a></p>
-{{end}}
+<h1>Вход</h1>
+{{if .Error}}<p style="color:red">{{.Error}}</p>{{end}}
+<form method="POST">
+    <input name="username" placeholder="Логин">
+    <input name="password" type="password" placeholder="Пароль">
+    <button>Войти</button>
+</form>
+<a href="/register">Нет аккаунта? Зарегистрироваться</a>

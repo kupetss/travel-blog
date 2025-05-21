@@ -1,0 +1,20 @@
+<h1>Профиль: {{.Username}}</h1>
+
+<h2>Мои посты</h2>
+{{if .Posts}}
+    {{range .Posts}}
+        <div>
+            <p><strong>{{.Content}}</strong></p>
+            <small>{{.CreatedAt}}</small>
+        </div>
+    {{end}}
+{{else}}
+    <p>У вас ещё нет постов.</p>
+{{end}}
+
+<h2>Изменить логин и пароль</h2>
+<form method="POST" action="/profile">
+    <input name="new_username" placeholder="Новый логин">
+    <input name="new_password" placeholder="Новый пароль">
+    <button>Сохранить</button>
+</form>

@@ -1,0 +1,8 @@
+{{ define "content" }}
+<h1>Новый пост</h1>
+<form method="POST">
+  <textarea name="content" placeholder="Ваш пост"></textarea>
+  <input type="submit" value="Опубликовать">
+</form>
+{{ end }}
+{{ template "base.html" . }}

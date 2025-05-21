@@ -1,98 +1,15 @@
+{{ define "base.html" }}
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Travel Blog</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            line-height: 1.6;
-        }
-        nav {
-            background: #f0f0f0;
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-        }
-        nav a {
-            margin-right: 15px;
-            text-decoration: none;
-            color: #333;
-        }
-        nav a:hover {
-            color: #007bff;
-        }
-        .post {
-            margin-bottom: 30px;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background: #fff;
-        }
-        .post h2 {
-            margin-top: 0;
-            color: #333;
-        }
-        .meta {
-            color: #666;
-            font-size: 0.9em;
-            margin-bottom: 10px;
-        }
-        form div {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        input[type="text"],
-        input[type="password"],
-        textarea {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        textarea {
-            height: 200px;
-            resize: vertical;
-        }
-        button {
-            background-color: #007bff;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .error {
-            color: #dc3545;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #f5c6cb;
-            background-color: #f8d7da;
-            border-radius: 4px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Блог</title>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-   <nav>
-    <a href="/?_={{.Timestamp}}">Home</a>
-    {{if .UserID}}
-        | <a href="/post?_={{.Timestamp}}">New Post</a>
-        | <a href="/logout?_={{.Timestamp}}">Logout</a>
-    {{else}}
-        | <a href="/login?_={{.Timestamp}}">Login</a>
-        | <a href="/register?_={{.Timestamp}}">Register</a>
-    {{end}}
-</nav>
-    {{block "content" .}}{{end}}
+  <div class="container">
+    {{ template "content" . }}
+  </div>
 </body>
 </html>
+{{ end }}
