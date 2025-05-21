@@ -1,0 +1,25 @@
+{{template "base.html" .}}
+
+{{define "content"}}
+    <h1>Travel Blog</h1>
+    
+    {{if .UserID}}
+        <p>Welcome! <a href="/post">Create new post</a></p>
+    {{else}}
+        <p>Welcome! Please <a href="/login">login</a> to create posts.</p>
+    {{end}}
+
+    {{range .Posts}}
+        <div class="post">
+            <h2>{{.Title}}</h2>
+            <div class="meta">
+                Posted by {{.Author}} on {{.CreatedAt.Format "January 2, 2006 at 15:04"}}
+            </div>
+            <p>{{.Content}}</p>
+        </div>
+    {{else}}
+        <div class="post">
+            <p>No posts yet. Be the first to post!</p>
+        </div>
+    {{end}}
+{{end}}
