@@ -50,6 +50,7 @@ func main() {
 	http.HandleFunc("/login", loginHandler)
 	http.HandleFunc("/profile", profileHandler)
 	http.HandleFunc("/logout", logoutHandler)
+	http.HandleFunc("/create-post", createPostHandler)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	log.Println("[Server] Running at http://localhost:8080")
@@ -57,7 +58,6 @@ func main() {
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println("[Home] Loading posts")
 	user, _ := getUser(r)
 
 	rows, err := db.Query("SELECT author, content, created_at FROM posts ORDER BY created_at DESC")
@@ -123,7 +123,7 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.Method == "POST" {
+	if r.Method == "POST" && r.FormValue("update_profile") == "true" {
 		newUsername := r.FormValue("new_username")
 		newPassword := r.FormValue("new_password")
 		_, err := db.Exec("UPDATE users SET username = ?, password = ? WHERE username = ?", newUsername, newPassword, user)
@@ -151,6 +151,28 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 		"Username": user,
 		"Posts":    posts,
 	})
+}
+
+func createPostHandler(w http.ResponseWriter, r *http.Request) {
+	user, err := getUser(r)
+	if err != nil {
+		http.Redirect(w, r, "/login", 302)
+		return
+	}
+
+	if r.Method == "POST" {
+		content := r.FormValue("content")
+		if content != "" {
+			_, err := db.Exec("INSERT INTO posts (author, content) VALUES (?, ?)", user, content)
+			if err != nil {
+				http.Error(w, "Error creating post", 500)
+				return
+			}
+		}
+		http.Redirect(w, r, "/profile", 302)
+		return
+	}
+	http.Redirect(w, r, "/profile", 302)
 }
 
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
