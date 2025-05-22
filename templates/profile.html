@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile</title>
+    <title>Профиль - Travel Blog</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        /* Общие стили из index.html */
         :root {
             --dark-green: #1a2e1a;
             --medium-green: #2d4a2d;
@@ -12,67 +14,85 @@
             --accent-gold: #d4af37;
             --light-text: #f5f5f5;
             --dark-text: #333;
+            --light-gray: #f5f5f5;
+            --medium-gray: #e0e0e0;
         }
         
         body {
-            font-family: 'Georgia', serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
             line-height: 1.6;
             color: var(--dark-text);
-            background-color: #f9f9f9;
+            background-color: var(--light-gray);
         }
         
         .container {
             width: 90%;
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 0 15px;
         }
         
+        /* Header */
         header {
             background-color: var(--dark-green);
             color: var(--light-text);
             padding: 1rem 0;
-            margin-bottom: 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         
         .header-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            width: 90%;
-            max-width: 1200px;
-            margin: 0 auto;
         }
         
         .logo {
-            font-size: 1.5rem;
-            font-weight: bold;
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: 1px;
             color: var(--accent-gold);
         }
         
         nav ul {
             display: flex;
             list-style: none;
-            gap: 1.5rem;
+            margin: 0;
+            padding: 0;
         }
         
-        nav a {
+        nav ul li {
+            margin-left: 1.5rem;
+        }
+        
+        nav ul li a {
             color: var(--light-text);
             text-decoration: none;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
             transition: color 0.3s;
         }
         
-        nav a:hover {
+        nav ul li a:hover {
             color: var(--accent-gold);
+        }
+        
+        /* Main Content */
+        main {
+            padding: 2rem 0;
         }
         
         .profile-section {
             background: white;
-            border-radius: 8px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
             padding: 2rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             margin-bottom: 2rem;
         }
         
@@ -83,95 +103,219 @@
             margin-bottom: 1.5rem;
         }
         
-        h1 {
+        .profile-title {
             color: var(--dark-green);
             margin: 0;
+            font-size: 1.8rem;
         }
         
-        .btn {
-            background-color: var(--light-green);
-            color: white;
-            border: none;
+        .stats {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .stat {
+            background-color: rgba(212, 175, 55, 0.1);
             padding: 0.5rem 1rem;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        
-        .btn:hover {
-            background-color: var(--medium-green);
-        }
-        
-        .btn-gold {
-            background-color: var(--accent-gold);
-        }
-        
-        .btn-gold:hover {
-            background-color: #c9a227;
-        }
-        
-        .form-group {
-            margin-bottom: 1rem;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: bold;
-        }
-        
-        .form-control {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-family: inherit;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: var(--accent-gold);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
         
         .create-post {
-            background: white;
-            border-radius: 8px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
             padding: 2rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             margin-bottom: 2rem;
         }
         
+        .create-post h2 {
+            color: var(--dark-green);
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
         textarea.form-control {
-            min-height: 100px;
+            width: 100%;
+            padding: 1rem;
+            border: 1px solid var(--medium-gray);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+            min-height: 120px;
             resize: vertical;
+            transition: border-color 0.3s;
+        }
+        
+        textarea.form-control:focus {
+            outline: none;
+            border-color: var(--light-green);
+        }
+        
+        .file-upload {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            background-color: var(--light-green);
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .file-upload:hover {
+            background-color: var(--medium-green);
+        }
+        
+        .file-upload input {
+            display: none;
+        }
+        
+        .file-info {
+            display: block;
+            margin-top: 0.5rem;
+            color: #888;
+            font-size: 0.85rem;
+        }
+        
+        .btn-submit {
+            background-color: var(--accent-gold);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.8rem;
+            border-radius: 25px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        
+        .btn-submit:hover {
+            background-color: #c9a227;
         }
         
         .posts-container {
             background: white;
-            border-radius: 8px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
             padding: 2rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .posts-title {
+            color: var(--dark-green);
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
         }
         
         .post {
             padding: 1.5rem 0;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--medium-gray);
         }
         
         .post:last-child {
             border-bottom: none;
         }
         
+        .post-with-image {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 1.5rem;
+        }
+        
+        .post-image {
+            border-radius: 8px;
+            overflow: hidden;
+            height: 100px;
+        }
+        
+        .post-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
         .post-content {
-            font-size: 1.1rem;
-            line-height: 1.6;
+            flex-grow: 1;
+        }
+        
+        .post-text {
+            color: #444;
+            line-height: 1.7;
             margin-bottom: 0.5rem;
         }
         
         .post-meta {
-            color: #666;
-            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
-        .update-form {
-            margin-top: 2rem;
-            padding-top: 2rem;
-            border-top: 1px solid #eee;
+        .post-date {
+            color: #888;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .post-actions {
+            display: flex;
+            gap: 0.8rem;
+        }
+        
+        .btn-action {
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: color 0.3s;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-action:hover {
+            background-color: rgba(0,0,0,0.05);
+            color: var(--dark-green);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem 0;
+            color: #666;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            color: var(--accent-gold);
+            margin-bottom: 1rem;
+        }
+        
+        .empty-state p {
+            margin-bottom: 1.5rem;
         }
         
         @media (max-width: 768px) {
@@ -181,7 +325,31 @@
             }
             
             nav ul {
+                justify-content: center;
+                margin-top: 1rem;
+            }
+            
+            nav ul li {
+                margin: 0 0.8rem;
+            }
+            
+            .profile-header {
+                flex-direction: column;
+                align-items: flex-start;
                 gap: 1rem;
+            }
+            
+            .stats {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .post-with-image {
+                grid-template-columns: 1fr;
+            }
+            
+            .post-image {
+                height: 200px;
             }
         }
     </style>
@@ -192,9 +360,8 @@
             <div class="logo">Travel Blog</div>
             <nav>
                 <ul>
-                    <li><a href="/">Главная</a></li>
-                    <li><a href="/profile">Профиль</a></li>
-                    <li><a href="/logout">Выйти</a></li>
+                    <li><a href="/"><i class="fas fa-home"></i> Главная</a></li>
+                    <li><a href="/logout"><i class="fas fa-sign-out-alt"></i> Выйти</a></li>
                 </ul>
             </nav>
         </div>
@@ -203,7 +370,7 @@
     <main class="container">
         <section class="profile-section">
             <div class="profile-header">
-                <h1>Профиль: {{.Username}}</h1>
+                <h1 class="profile-title">Профиль: {{.Username}}</h1>
                 <div class="stats">
                     <span class="stat"><i class="fas fa-pencil-alt"></i> {{len .Posts}} постов</span>
                 </div>
@@ -222,7 +389,7 @@
                         </label>
                         <span class="file-info">Максимальный размер: 10MB</span>
                     </div>
-                    <button type="submit" class="btn btn-gold">
+                    <button type="submit" class="btn-submit">
                         <i class="fas fa-paper-plane"></i> Опубликовать
                     </button>
                 </form>
@@ -230,25 +397,42 @@
         </section>
 
         <section class="posts-container">
-            <h2><i class="fas fa-history"></i> Ваши публикации</h2>
+            <h2 class="posts-title"><i class="fas fa-history"></i> Ваши публикации</h2>
             {{if .Posts}}
                 {{range .Posts}}
                     <div class="post">
                         {{if .ImagePath}}
-                        <div class="post-image">
-                            <img src="/static/{{.ImagePath}}" alt="Изображение поста">
+                        <div class="post-with-image">
+                            <div class="post-image">
+                                <img src="/static/{{.ImagePath}}" alt="Изображение поста">
+                            </div>
+                            <div class="post-content">
+                                <div class="post-text">{{.Content}}</div>
+                                <div class="post-meta">
+                                    <div class="post-date">
+                                        <i class="far fa-clock"></i> {{.CreatedAt}}
+                                    </div>
+                                    <div class="post-actions">
+                                        <!-- <button class="btn-action"><i class="far fa-edit"></i></button>
+                                        <button class="btn-action"><i class="far fa-trash-alt"></i></button> -->
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        {{end}}
-                        <div class="post-body">
-                            <p class="post-content">{{.Content}}</p>
+                        {{else}}
+                        <div class="post-content">
+                            <div class="post-text">{{.Content}}</div>
                             <div class="post-meta">
-                                <small><i class="far fa-clock"></i> {{.CreatedAt}}</small>
+                                <div class="post-date">
+                                    <i class="far fa-clock"></i> {{.CreatedAt}}
+                                </div>
                                 <div class="post-actions">
                                     <button class="btn-action"><i class="far fa-edit"></i></button>
                                     <button class="btn-action"><i class="far fa-trash-alt"></i></button>
                                 </div>
                             </div>
                         </div>
+                        {{end}}
                     </div>
                 {{end}}
             {{else}}
@@ -260,113 +444,5 @@
             {{end}}
         </section>
     </main>
-
-    <style>
-        /* Добавляем новые стили */
-        .stats {
-            display: flex;
-            gap: 15px;
-            margin-top: 10px;
-        }
-        
-        .stat {
-            background: rgba(212, 175, 55, 0.1);
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            color: var(--accent-gold);
-        }
-        
-        .file-upload {
-            display: inline-block;
-            padding: 8px 15px;
-            background: var(--light-green);
-            color: white;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .file-upload:hover {
-            background: var(--medium-green);
-        }
-        
-        .file-upload input {
-            display: none;
-        }
-        
-        .file-info {
-            display: block;
-            margin-top: 5px;
-            font-size: 0.8rem;
-            color: #666;
-        }
-        
-        .post-image {
-            margin-bottom: 15px;
-        }
-        
-        .post-image img {
-            width: 100%;
-            border-radius: 8px;
-            max-height: 400px;
-            object-fit: cover;
-        }
-        
-        .post-body {
-            padding: 0 10px;
-        }
-        
-        .post-actions {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .btn-action {
-            background: none;
-            border: none;
-            color: #666;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: color 0.3s;
-        }
-        
-        .btn-action:hover {
-            color: var(--accent-gold);
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 40px 0;
-            color: #666;
-        }
-        
-        .empty-state i {
-            font-size: 3rem;
-            margin-bottom: 15px;
-            color: var(--light-green);
-        }
-        
-        /* Обновляем существующие стили */
-        .btn-gold {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .post {
-            padding: 1.5rem;
-            border-bottom: 1px solid #eee;
-            margin-bottom: 1.5rem;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        
-        .post:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-        }
-    </style>
 </body>
 </html>
