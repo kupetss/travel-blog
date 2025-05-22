@@ -291,62 +291,59 @@ form button:hover {
     </style>
 </head>
 <body>
-  <header>
+ <header>
     <div class="container">
       <div class="logo">Travel Blog</div>
       
       <div class="search-container">
         <form action="/search" method="GET">
-          <input type="text" name="query" placeholder="Search posts..." class="search-input">
+          <input type="text" name="query" placeholder="Поиск..." class="search-input">
           <button type="submit" class="search-button">
-            <i class="fas fa-search"></i> Search
+            <i class="fas fa-search"></i> Поиск
           </button>
         </form>
       </div>
       
       <nav>
         <ul>
-          <li><a href="/profile">Home</a></li>
-          <li><a href="/register">Register</a></li>
           {{if .User}}
-            <li><a href="/profile">Profile</a></li>
-            <li><a href="/logout">Logout</a></li>
+            <li><a href="/profile">Профиль</a></li>
+            <li><a href="/logout">Выйти</a></li>
           {{else}}
-            <li><a href="/login">Login</a></li>
+            <li><a href="/register">Зарегистрироваться</a></li>
+            <li><a href="/login">Войти</a></li>
           {{end}}
         </ul>
       </nav>
     </div>
-  </header>
+</header>
 
   <main>
     <div class="container">
-      <h1>Welcome to My Travel Blog</h1>
+      <h1>Осатавь пост о своем путешествие</h1>
       <div class="posts">
         {{range .Posts}}
         <div class="post" style="margin-bottom: 40px;">
           <div class="post-content">
-            <h2>Post by {{.Author}}</h2>
+            <h2>{{.Author}}</h2>
             <p>{{.Content}}</p>
-            <small>Posted on: {{.CreatedAt}}</small>
+            <small>{{.CreatedAt}}</small>
           </div>
 
-          <!-- Комментарии -->
           {{with index $.Comments .ID}}
           <div class="comments" style="margin-top: 15px; padding-left: 15px; border-left: 2px solid #ccc;">
-            <h4>Comments:</h4>
+            <h4>Комментарии:</h4>
             {{range .}}
               <p><strong>{{.Author}}</strong>: {{.Content}} <br><small>{{.CreatedAt}}</small></p>
             {{end}}
           </div>
           {{end}}
 
-          <!-- Форма комментария -->
           {{if $.User}}
           <form method="POST" style="margin-top: 10px;">
             <input type="hidden" name="post_id" value="{{.ID}}">
-            <input type="text" name="comment" placeholder="Add a comment..." required>
-            <button type="submit">Comment</button>
+            <input type="text" name="comment" placeholder="Оставить комментарий..." required>
+            <button type="submit">Отправить</button>
           </form>
           {{end}}
         </div>
@@ -362,18 +359,18 @@ form button:hover {
       <div class="footer-content">
         <div class="footer-section">
           <h3>Travel Blog</h3>
-          <p>Sharing my travel experiences around the world.</p>
+          <p>Делюсь впечатлениями от путешествий по миру.</p>
         </div>
         <div class="footer-section">
-          <h3>Quick Links</h3>
+          <h3>Ссылки</h3>
           <ul>
-            <li><a href="profile">Home</a></li>
-            <li><a href="about.html">About</a></li>
-            <li><a href="contact.html">Contact</a></li>
+            <li><a href="profile">Профиль</a></li>
+            <li><a href="about.html">О нас</a></li>
+            <li><a href="contact.html">Контакты</a></li>
           </ul>
         </div>
         <div class="footer-section">
-          <h3>Connect</h3>
+          <h3>Соц. сети</h3>
           <div class="social-icons">
             <a href="#"><i class="fab fa-instagram"></i></a>
             <a href="#"><i class="fab fa-twitter"></i></a>
@@ -382,7 +379,7 @@ form button:hover {
         </div>
       </div>
       <div class="copyright">
-        <p>&copy; 2025 Travel Blog. All rights reserved.</p>
+        <p>&copy; 2025 Travel Blog.</p>
       </div>
     </div>
   </footer>
