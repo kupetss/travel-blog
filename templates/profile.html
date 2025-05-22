@@ -193,6 +193,7 @@
             <nav>
                 <ul>
                     <li><a href="/">Главная</a></li>
+                    <li><a href="/profile">Профиль</a></li>
                     <li><a href="/logout">Выйти</a></li>
                 </ul>
             </nav>
@@ -203,46 +204,169 @@
         <section class="profile-section">
             <div class="profile-header">
                 <h1>Профиль: {{.Username}}</h1>
+                <div class="stats">
+                    <span class="stat"><i class="fas fa-pencil-alt"></i> {{len .Posts}} постов</span>
+                </div>
             </div>
 
             <div class="create-post">
-                <h2>Создать новый пост</h2>
-                <form method="POST" action="/create-post">
+                <h2><i class="fas fa-plus-circle"></i> Создать новый пост</h2>
+                <form method="POST" action="/create-post" enctype="multipart/form-data">
                     <div class="form-group">
-                        <textarea class="form-control" name="content" placeholder="Что у вас нового?" required></textarea>
+                        <textarea class="form-control" name="content" placeholder="Расскажите о вашем путешествии..." required></textarea>
                     </div>
-                    <button type="submit" class="btn btn-gold">Опубликовать</button>
+                    <div class="form-group">
+                        <label for="image" class="file-upload">
+                            <i class="fas fa-camera"></i> Выберите фото
+                            <input type="file" id="image" name="image" accept="image/*">
+                        </label>
+                        <span class="file-info">Максимальный размер: 10MB</span>
+                    </div>
+                    <button type="submit" class="btn btn-gold">
+                        <i class="fas fa-paper-plane"></i> Опубликовать
+                    </button>
                 </form>
             </div>
-
-            <!-- <div class="update-form">
-                <h2>Обновить профиль</h2>
-                <form method="POST">
-                    <input type="hidden" name="update_profile" value="true">
-                    <div class="form-group">
-                        <input type="text" class="form-control" name="new_username" placeholder="Новое имя пользователя">
-                    </div>
-                    <div class="form-group">
-                        <input type="password" class="form-control" name="new_password" placeholder="Новый пароль">
-                    </div>
-                    <button type="submit" class="btn">Обновить</button>
-                </form>
-            </div> -->
         </section>
 
         <section class="posts-container">
-            <h2>Ваши посты</h2>
+            <h2><i class="fas fa-history"></i> Ваши публикации</h2>
             {{if .Posts}}
                 {{range .Posts}}
                     <div class="post">
-                        <p class="post-content">{{.Content}}</p>
-                        <small class="post-meta">Опубликовано: {{.CreatedAt}}</small>
+                        {{if .ImagePath}}
+                        <div class="post-image">
+                            <img src="/static/{{.ImagePath}}" alt="Изображение поста">
+                        </div>
+                        {{end}}
+                        <div class="post-body">
+                            <p class="post-content">{{.Content}}</p>
+                            <div class="post-meta">
+                                <small><i class="far fa-clock"></i> {{.CreatedAt}}</small>
+                                <div class="post-actions">
+                                    <button class="btn-action"><i class="far fa-edit"></i></button>
+                                    <button class="btn-action"><i class="far fa-trash-alt"></i></button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 {{end}}
             {{else}}
-                <p>У вас пока нет постов.</p>
+                <div class="empty-state">
+                    <i class="far fa-newspaper"></i>
+                    <p>У вас пока нет публикаций</p>
+                    <p>Начните делиться своими путешествиями!</p>
+                </div>
             {{end}}
         </section>
     </main>
+
+    <style>
+        /* Добавляем новые стили */
+        .stats {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .stat {
+            background: rgba(212, 175, 55, 0.1);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: var(--accent-gold);
+        }
+        
+        .file-upload {
+            display: inline-block;
+            padding: 8px 15px;
+            background: var(--light-green);
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .file-upload:hover {
+            background: var(--medium-green);
+        }
+        
+        .file-upload input {
+            display: none;
+        }
+        
+        .file-info {
+            display: block;
+            margin-top: 5px;
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .post-image {
+            margin-bottom: 15px;
+        }
+        
+        .post-image img {
+            width: 100%;
+            border-radius: 8px;
+            max-height: 400px;
+            object-fit: cover;
+        }
+        
+        .post-body {
+            padding: 0 10px;
+        }
+        
+        .post-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-action {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: color 0.3s;
+        }
+        
+        .btn-action:hover {
+            color: var(--accent-gold);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 0;
+            color: #666;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: var(--light-green);
+        }
+        
+        /* Обновляем существующие стили */
+        .btn-gold {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .post {
+            padding: 1.5rem;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 1.5rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .post:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+    </style>
 </body>
 </html>

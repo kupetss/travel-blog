@@ -291,98 +291,139 @@ form button:hover {
     </style>
 </head>
 <body>
- <header>
-    <div class="container">
-      <div class="logo">Travel Blog</div>
-      
-      <div class="search-container">
-        <form action="/search" method="GET">
-          <input type="text" name="query" placeholder="Поиск..." class="search-input">
-          <button type="submit" class="search-button">
-            <i class="fas fa-search"></i> Поиск
-          </button>
-        </form>
-      </div>
-      
-      <nav>
-        <ul>
-          {{if .User}}
-            <li><a href="/profile">Профиль</a></li>
-            <li><a href="/logout">Выйти</a></li>
-          {{else}}
-            <li><a href="/register">Зарегистрироваться</a></li>
-            <li><a href="/login">Войти</a></li>
-          {{end}}
-        </ul>
-      </nav>
-    </div>
-</header>
-
-  <main>
-    <div class="container">
-      <h1>Осатавь пост о своем путешествие</h1>
-      <div class="posts">
-        {{range .Posts}}
-        <div class="post" style="margin-bottom: 40px;">
-          <div class="post-content">
-            <h2>{{.Author}}</h2>
-            <p>{{.Content}}</p>
-            <small>{{.CreatedAt}}</small>
-          </div>
-
-          {{with index $.Comments .ID}}
-          <div class="comments" style="margin-top: 15px; padding-left: 15px; border-left: 2px solid #ccc;">
-            <h4>Комментарии:</h4>
-            {{range .}}
-              <p><strong>{{.Author}}</strong>: {{.Content}} <br><small>{{.CreatedAt}}</small></p>
-            {{end}}
-          </div>
-          {{end}}
-
-          {{if $.User}}
-          <form method="POST" style="margin-top: 10px;">
-            <input type="hidden" name="post_id" value="{{.ID}}">
-            <input type="text" name="comment" placeholder="Оставить комментарий..." required>
-            <button type="submit">Отправить</button>
-          </form>
-          {{end}}
+    <header>
+        <div class="container">
+            <div class="logo">Travel Blog</div>
+            
+            <div class="search-container">
+                <form action="/search" method="GET">
+                    <div class="search-wrapper">
+                        <input type="text" name="query" placeholder="Поиск постов..." class="search-input">
+                        <button type="submit" class="search-button">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <nav>
+                <ul>
+                    {{if .User}}
+                        <li><a href="/profile"><i class="fas fa-user-circle"></i> Профиль</a></li>
+                        <li><a href="/logout"><i class="fas fa-sign-out-alt"></i> Выйти</a></li>
+                    {{else}}
+                        <li><a href="/register"><i class="fas fa-user-plus"></i> Регистрация</a></li>
+                        <li><a href="/login"><i class="fas fa-sign-in-alt"></i> Вход</a></li>
+                    {{end}}
+                </ul>
+            </nav>
         </div>
-        {{else}}
-        <p>No posts available yet.</p>
-        {{end}}
-      </div>
-    </div>
-  </main>
+    </header>
 
-  <footer>
-    <div class="container">
-      <div class="footer-content">
-        <div class="footer-section">
-          <h3>Travel Blog</h3>
-          <p>Делюсь впечатлениями от путешествий по миру.</p>
+    <main>
+        <div class="container">
+            <div class="page-header">
+                <h1><i class="fas fa-globe-europe"></i> Поделитесь своим путешествием</h1>
+                <p>Расскажите миру о своих приключениях и вдохновите других!</p>
+            </div>
+            
+            <div class="posts">
+                {{range .Posts}}
+                <div class="post-card">
+                    {{if .ImagePath}}
+                    <div class="post-image">
+                        <img src="/static/{{.ImagePath}}" alt="Фото путешествия">
+                    </div>
+                    {{end}}
+                    
+                    <div class="post-content">
+                        <div class="post-header">
+                            <h2><i class="fas fa-user"></i> {{.Author}}</h2>
+                            <span class="post-date"><i class="far fa-clock"></i> {{.CreatedAt}}</span>
+                        </div>
+                        
+                        <div class="post-text">
+                            <p>{{.Content}}</p>
+                        </div>
+                        
+                        {{with index $.Comments .ID}}
+                        <div class="comments-section">
+                            <h4><i class="far fa-comments"></i> Комментарии ({{len .}}):</h4>
+                            <div class="comments-list">
+                                {{range .}}
+                                <div class="comment">
+                                    <div class="comment-author"><strong>{{.Author}}</strong></div>
+                                    <div class="comment-text">{{.Content}}</div>
+                                    <div class="comment-date"><small>{{.CreatedAt}}</small></div>
+                                </div>
+                                {{end}}
+                            </div>
+                        </div>
+                        {{end}}
+
+                        {{if $.User}}
+                        <form method="POST" class="comment-form">
+                            <input type="hidden" name="post_id" value="{{.ID}}">
+                            <div class="form-group">
+                                <input type="text" name="comment" placeholder="Напишите комментарий..." required>
+                                <button type="submit" class="btn-send">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </form>
+                        {{end}}
+                    </div>
+                </div>
+                {{else}}
+                <div class="empty-posts">
+                    <i class="far fa-compass"></i>
+                    <p>Пока нет ни одного поста</p>
+                    {{if .User}}
+                    <a href="/profile" class="btn-create">Создать первый пост</a>
+                    {{else}}
+                    <p>Войдите, чтобы поделиться своими путешествиями</p>
+                    {{end}}
+                </div>
+                {{end}}
+            </div>
         </div>
-        <div class="footer-section">
-          <h3>Ссылки</h3>
-          <ul>
-            <li><a href="profile">Профиль</a></li>
-            <li><a href="about.html">О нас</a></li>
-            <li><a href="contact.html">Контакты</a></li>
-          </ul>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3><i class="fas fa-map-marked-alt"></i> Travel Blog</h3>
+                    <p>Открывайте мир вместе с нами. Делитесь своими впечатлениями и вдохновляйтесь!</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Навигация</h3>
+                    <ul>
+                        <li><a href="/"><i class="fas fa-home"></i> Главная</a></li>
+                        <li><a href="/profile"><i class="fas fa-user"></i> Профиль</a></li>
+                        <li><a href="#"><i class="fas fa-info-circle"></i> О нас</a></li>
+                        <li><a href="#"><i class="fas fa-envelope"></i> Контакты</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Мы в соцсетях</h3>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                    <div class="subscribe">
+                        <input type="email" placeholder="Ваш email">
+                        <button>Подписаться</button>
+                    </div>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2025 Travel Blog. Все права защищены.</p>
+            </div>
         </div>
-        <div class="footer-section">
-          <h3>Соц. сети</h3>
-          <div class="social-icons">
-            <a href="#"><i class="fab fa-instagram"></i></a>
-            <a href="#"><i class="fab fa-twitter"></i></a>
-            <a href="#"><i class="fab fa-facebook"></i></a>
-          </div>
-        </div>
-      </div>
-      <div class="copyright">
-        <p>&copy; 2025 Travel Blog.</p>
-      </div>
-    </div>
-  </footer>
+    </footer>
 </body>
 
 </html>
