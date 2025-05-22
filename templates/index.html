@@ -523,8 +523,7 @@
                                 {{.Author}}
                             </div>
                             <div class="post-date">
-                                <i class="far fa-clock"></i>
-                                {{.CreatedAt}}
+                              {{formatDateTime .CreatedAt}}
                             </div>
                         </div>
                         
@@ -548,8 +547,8 @@
                                         <div class="comment-author">{{.Author}}</div>
                                         <div class="comment-text">{{.Content}}</div>
                                         <div class="comment-date">
-                                            <i class="far fa-clock"></i>
-                                            {{.CreatedAt}}
+                                                                         {{formatDateTime .CreatedAt}}
+
                                         </div>
                                     </div>
                                 </div>

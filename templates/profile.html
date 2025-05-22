@@ -410,7 +410,8 @@
                                 <div class="post-text">{{.Content}}</div>
                                 <div class="post-meta">
                                     <div class="post-date">
-                                        <i class="far fa-clock"></i> {{.CreatedAt}}
+                                                                     {{formatDateTime .CreatedAt}}
+
                                     </div>
                                     <div class="post-actions">
                                         <!-- <button class="btn-action"><i class="far fa-edit"></i></button>
@@ -424,7 +425,8 @@
                             <div class="post-text">{{.Content}}</div>
                             <div class="post-meta">
                                 <div class="post-date">
-                                    <i class="far fa-clock"></i> {{.CreatedAt}}
+                                                                 {{formatDateTime .CreatedAt}}
+
                                 </div>
                                 <div class="post-actions">
                                     <button class="btn-action"><i class="far fa-edit"></i></button>
