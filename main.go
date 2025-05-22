@@ -5,12 +5,21 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strings"
 
 	_ "modernc.org/sqlite"
 )
 
 type Post struct {
 	ID        int
+	Author    string
+	Content   string
+	CreatedAt string
+}
+
+type Comment struct {
+	ID        int
+	PostID    int
 	Author    string
 	Content   string
 	CreatedAt string
@@ -39,6 +48,15 @@ func main() {
 			content TEXT,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		);
+		CREATE TABLE IF NOT EXISTS comments (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		post_id INTEGER,
+		author TEXT,
+		content TEXT,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+	);
+
 	`)
 	if err != nil {
 		log.Fatal(err)
@@ -51,6 +69,7 @@ func main() {
 	http.HandleFunc("/profile", profileHandler)
 	http.HandleFunc("/logout", logoutHandler)
 	http.HandleFunc("/create-post", createPostHandler)
+	http.HandleFunc("/search", searchHandler)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	log.Println("[Server] Running at http://localhost:8080")
@@ -60,6 +79,21 @@ func main() {
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	user, _ := getUser(r)
 
+	// Обработка новой формы комментария
+	if r.Method == "POST" && user != "" {
+		postID := r.FormValue("post_id")
+		content := r.FormValue("comment")
+		if content != "" && postID != "" {
+			_, err := db.Exec("INSERT INTO comments (post_id, author, content) VALUES (?, ?, ?)", postID, user, content)
+			if err != nil {
+				http.Error(w, "Error adding comment", 500)
+				return
+			}
+		}
+		http.Redirect(w, r, "/", 302)
+		return
+	}
+
 	rows, err := db.Query("SELECT id, author, content, created_at FROM posts ORDER BY created_at DESC")
 	if err != nil {
 		http.Error(w, "Error loading posts", http.StatusInternalServerError)
@@ -68,6 +102,8 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	var posts []Post
+	postMap := map[int][]Comment{}
+
 	for rows.Next() {
 		var post Post
 		err := rows.Scan(&post.ID, &post.Author, &post.Content, &post.CreatedAt)
@@ -78,14 +114,91 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		posts = append(posts, post)
 	}
 
-	if err = rows.Err(); err != nil {
-		http.Error(w, "Error processing posts", http.StatusInternalServerError)
+	// Загрузка комментариев
+	commentRows, err := db.Query("SELECT post_id, author, content, created_at FROM comments ORDER BY created_at ASC")
+	if err != nil {
+		http.Error(w, "Error loading comments", 500)
 		return
+	}
+	defer commentRows.Close()
+
+	for commentRows.Next() {
+		var c Comment
+		err := commentRows.Scan(&c.PostID, &c.Author, &c.Content, &c.CreatedAt)
+		if err == nil {
+			postMap[c.PostID] = append(postMap[c.PostID], c)
+		}
 	}
 
 	err = templates.ExecuteTemplate(w, "index.html", map[string]interface{}{
-		"Posts": posts,
-		"User":  user,
+		"Posts":    posts,
+		"Comments": postMap,
+		"User":     user,
+	})
+	if err != nil {
+		http.Error(w, "Error rendering template", http.StatusInternalServerError)
+	}
+}
+
+func searchHandler(w http.ResponseWriter, r *http.Request) {
+	user, _ := getUser(r)
+	query := strings.TrimSpace(r.FormValue("query"))
+
+	var posts []Post
+	postMap := map[int][]Comment{}
+
+	if query != "" {
+		rows, err := db.Query("SELECT id, author, content, created_at FROM posts WHERE content LIKE ? OR author LIKE ? ORDER BY created_at DESC",
+			"%"+query+"%", "%"+query+"%")
+		if err != nil {
+			http.Error(w, "Error searching posts", http.StatusInternalServerError)
+			return
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var post Post
+			err := rows.Scan(&post.ID, &post.Author, &post.Content, &post.CreatedAt)
+			if err != nil {
+				http.Error(w, "Error reading posts", http.StatusInternalServerError)
+				return
+			}
+			posts = append(posts, post)
+		}
+
+		// Загрузка комментариев для найденных постов
+		if len(posts) > 0 {
+			var postIDs []interface{}
+			for _, post := range posts {
+				postIDs = append(postIDs, post.ID)
+			}
+
+			queryStr := "SELECT post_id, author, content, created_at FROM comments WHERE post_id IN (?" + strings.Repeat(",?", len(postIDs)-1) + ") ORDER BY created_at ASC"
+			commentRows, err := db.Query(queryStr, postIDs...)
+			if err != nil {
+				http.Error(w, "Error loading comments", 500)
+				return
+			}
+			defer commentRows.Close()
+
+			for commentRows.Next() {
+				var c Comment
+				err := commentRows.Scan(&c.PostID, &c.Author, &c.Content, &c.CreatedAt)
+				if err == nil {
+					postMap[c.PostID] = append(postMap[c.PostID], c)
+				}
+			}
+		}
+	} else {
+		http.Redirect(w, r, "/", 302)
+		return
+	}
+
+	err := templates.ExecuteTemplate(w, "index.html", map[string]interface{}{
+		"Posts":       posts,
+		"Comments":    postMap,
+		"User":        user,
+		"SearchQuery": query,
 	})
 	if err != nil {
 		http.Error(w, "Error rendering template", http.StatusInternalServerError)

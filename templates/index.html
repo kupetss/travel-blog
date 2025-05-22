@@ -222,74 +222,170 @@
                 align-items: center;
             }
         }
+        .comments {
+    background-color: #f0f4f0;
+    border-left: 4px solid var(--light-green);
+    padding: 1rem;
+    margin-top: 1rem;
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.comments h4 {
+    margin-top: 0;
+    color: var(--dark-green);
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+.comments p {
+    margin: 0.5rem 0;
+    color: #444;
+}
+
+.comments strong {
+    color: var(--medium-green);
+}
+
+.comments small {
+    color: #888;
+    font-size: 0.85rem;
+}
+
+form {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+form input[type="text"] {
+    padding: 0.6rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+form input[type="text"]:focus {
+    border-color: var(--medium-green);
+}
+
+form button {
+    align-self: flex-start;
+    background-color: var(--light-green);
+    color: white;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+form button:hover {
+    background-color: var(--dark-green);
+}
+
     </style>
 </head>
 <body>
-      <header>
-        <div class="container">
-            <div class="logo">Travel Blog</div>
-            <nav>
-                <ul>
-                    <li><a href="/profile">Home</a></li>
-                    <li><a href="/register">Register</a></li>
-                    {{if .User}}
-                        <li><a href="/profile">Profile</a></li>
-                        <li><a href="/logout">Logout</a></li>
-                    {{else}}
-                        <li><a href="/login">Login</a></li>
-                    {{end}}
-                </ul>
-            </nav>
-        </div>
-    </header>
+  <header>
+    <div class="container">
+      <div class="logo">Travel Blog</div>
+      
+      <div class="search-container">
+        <form action="/search" method="GET">
+          <input type="text" name="query" placeholder="Search posts..." class="search-input">
+          <button type="submit" class="search-button">
+            <i class="fas fa-search"></i> Search
+          </button>
+        </form>
+      </div>
+      
+      <nav>
+        <ul>
+          <li><a href="/profile">Home</a></li>
+          <li><a href="/register">Register</a></li>
+          {{if .User}}
+            <li><a href="/profile">Profile</a></li>
+            <li><a href="/logout">Logout</a></li>
+          {{else}}
+            <li><a href="/login">Login</a></li>
+          {{end}}
+        </ul>
+      </nav>
+    </div>
+  </header>
 
-    <main>
-        <div class="container">
-            <h1>Welcome to My Travel Blog</h1>
-            <div class="posts">
-                {{range .Posts}}
-                <div class="post">
-                    <div class="post-content">
-                        <h2>Post by {{.Author}}</h2>
-                        <p>{{.Content}}</p>
-                        <small>Posted on: {{.CreatedAt}}</small>
-                    </div>
-                </div>
-                {{else}}
-                <p>No posts available yet.</p>
-                {{end}}
-            </div>
-        </div>
-    </main>
+  <main>
+    <div class="container">
+      <h1>Welcome to My Travel Blog</h1>
+      <div class="posts">
+        {{range .Posts}}
+        <div class="post" style="margin-bottom: 40px;">
+          <div class="post-content">
+            <h2>Post by {{.Author}}</h2>
+            <p>{{.Content}}</p>
+            <small>Posted on: {{.CreatedAt}}</small>
+          </div>
 
-    <footer>
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3>Travel Blog</h3>
-                    <p>Sharing my travel experiences around the world.</p>
-                </div>
-                <div class="footer-section">
-                    <h3>Quick Links</h3>
-                    <ul>
-                        <li><a href="profile">Home</a></li>
-                        <li><a href="about.html">About</a></li>
-                        <li><a href="contact.html">Contact</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h3>Connect</h3>
-                    <div class="social-icons">
-                        <a href="#"><i class="fab fa-instagram"></i></a>
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                        <a href="#"><i class="fab fa-facebook"></i></a>
-                    </div>
-                </div>
-            </div>
-            <div class="copyright">
-                <p>&copy; 2025 Travel Blog. All rights reserved.</p>
-            </div>
+          <!-- Комментарии -->
+          {{with index $.Comments .ID}}
+          <div class="comments" style="margin-top: 15px; padding-left: 15px; border-left: 2px solid #ccc;">
+            <h4>Comments:</h4>
+            {{range .}}
+              <p><strong>{{.Author}}</strong>: {{.Content}} <br><small>{{.CreatedAt}}</small></p>
+            {{end}}
+          </div>
+          {{end}}
+
+          <!-- Форма комментария -->
+          {{if $.User}}
+          <form method="POST" style="margin-top: 10px;">
+            <input type="hidden" name="post_id" value="{{.ID}}">
+            <input type="text" name="comment" placeholder="Add a comment..." required>
+            <button type="submit">Comment</button>
+          </form>
+          {{end}}
         </div>
-    </footer>
+        {{else}}
+        <p>No posts available yet.</p>
+        {{end}}
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>Travel Blog</h3>
+          <p>Sharing my travel experiences around the world.</p>
+        </div>
+        <div class="footer-section">
+          <h3>Quick Links</h3>
+          <ul>
+            <li><a href="profile">Home</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h3>Connect</h3>
+          <div class="social-icons">
+            <a href="#"><i class="fab fa-instagram"></i></a>
+            <a href="#"><i class="fab fa-twitter"></i></a>
+            <a href="#"><i class="fab fa-facebook"></i></a>
+          </div>
+        </div>
+      </div>
+      <div class="copyright">
+        <p>&copy; 2025 Travel Blog. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
 </body>
+
 </html>
