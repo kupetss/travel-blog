@@ -15,7 +15,6 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-// Структуры данных
 type Post struct {
 	ID        int
 	Author    string
@@ -76,6 +75,47 @@ func initDatabase() {
 	createTables()
 }
 
+func deletePostHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	user := getCurrentUser(r)
+	if user == "" {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+
+	postID := r.FormValue("post_id")
+	if postID == "" {
+		http.Error(w, "Post ID is required", http.StatusBadRequest)
+		return
+	}
+
+	// Проверяем, что пост принадлежит текущему пользователю
+	var author string
+	err := db.QueryRow("SELECT author FROM posts WHERE id = ?", postID).Scan(&author)
+	if err != nil {
+		http.Error(w, "Post not found", http.StatusNotFound)
+		return
+	}
+
+	if author != user {
+		http.Error(w, "You can only delete your own posts", http.StatusForbidden)
+		return
+	}
+
+	// Удаляем пост (внешний ключ каскадно удалит комментарии)
+	_, err = db.Exec("DELETE FROM posts WHERE id = ?", postID)
+	if err != nil {
+		http.Error(w, "Error deleting post", http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/profile", http.StatusFound)
+}
+
 func createTables() {
 	sqlStmt := `
 	CREATE TABLE IF NOT EXISTS users (
@@ -123,6 +163,7 @@ func startServer() {
 	mux.HandleFunc("/profile", profileHandler)
 	mux.HandleFunc("/create-post", createPostHandler)
 	mux.HandleFunc("/search", searchHandler)
+	mux.HandleFunc("/delete-post", deletePostHandler)
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	server := &http.Server{

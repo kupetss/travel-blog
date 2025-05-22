@@ -351,7 +351,93 @@
             .post-image {
                 height: 200px;
             }
+            .delete-form {
+    display: inline;
+}
+
+.delete-btn {
+    background: none;
+    border: none;
+    color: #ff4444;
+    cursor: pointer;
+    padding: 5px;
+    font-size: 16px;
+    transition: color 0.2s;
+}
+
+.delete-btn:hover {
+    color: #cc0000;
+}
+
+.btn-action {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 5px;
+    font-size: 16px;
+    transition: color 0.2s;
+    margin-left: 5px;
+}
+
+.btn-action:hover {
+    color: #333;
+}
         }
+        
+footer {
+    background-color: var(--dark-green);
+    color: var(--light-text);
+    padding: 3rem 0 1.5rem;
+}
+
+.footer-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.footer-section h3 {
+    color: var(--accent-gold);
+    margin-bottom: 1.2rem;
+    font-size: 1.2rem;
+}
+
+.footer-section p {
+    color: #ccc;
+    line-height: 1.6;
+}
+
+.social-icons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.social-icons a {
+    color: white;
+    width: 36px;
+    height: 36px;
+    background-color: rgba(255,255,255,0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s;
+}
+
+.social-icons a:hover {
+    background-color: var(--accent-gold);
+}
+
+.copyright {
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 1.5rem;
+    text-align: center;
+    color: #aaa;
+    font-size: 0.9rem;
+}
     </style>
 </head>
 <body>
@@ -400,7 +486,7 @@
             <h2 class="posts-title"><i class="fas fa-history"></i> Ваши публикации</h2>
             {{if .Posts}}
                 {{range .Posts}}
-                    <div class="post">
+                    <div class="post" id="post-{{.ID}}">
                         {{if .ImagePath}}
                         <div class="post-with-image">
                             <div class="post-image">
@@ -410,12 +496,15 @@
                                 <div class="post-text">{{.Content}}</div>
                                 <div class="post-meta">
                                     <div class="post-date">
-                                                                     {{formatDateTime .CreatedAt}}
-
+                                        {{formatDateTime .CreatedAt}}
                                     </div>
                                     <div class="post-actions">
-                                        <!-- <button class="btn-action"><i class="far fa-edit"></i></button>
-                                        <button class="btn-action"><i class="far fa-trash-alt"></i></button> -->
+                                        <form action="/delete-post" method="POST" class="delete-form">
+                                            <input type="hidden" name="post_id" value="{{.ID}}">
+                                            <button type="submit" class="btn-action delete-btn" onclick="return confirm('Вы уверены, что хотите удалить эту публикацию?')">
+                                                <i class="far fa-trash-alt"></i>
+                                            </button>
+                                        </form>
                                     </div>
                                 </div>
                             </div>
@@ -425,12 +514,15 @@
                             <div class="post-text">{{.Content}}</div>
                             <div class="post-meta">
                                 <div class="post-date">
-                                                                 {{formatDateTime .CreatedAt}}
-
+                                    {{formatDateTime .CreatedAt}}
                                 </div>
                                 <div class="post-actions">
-                                    <button class="btn-action"><i class="far fa-edit"></i></button>
-                                    <button class="btn-action"><i class="far fa-trash-alt"></i></button>
+                                    <form action="/delete-post" method="POST" class="delete-form">
+                                        <input type="hidden" name="post_id" value="{{.ID}}">
+                                        <button type="submit" class="btn-action delete-btn" onclick="return confirm('Вы уверены, что хотите удалить эту публикацию?')">
+                                            <i class="far fa-trash-alt"></i>
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         </div>
@@ -446,5 +538,6 @@
             {{end}}
         </section>
     </main>
+
 </body>
 </html>
