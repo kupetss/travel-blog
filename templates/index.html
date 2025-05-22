@@ -225,14 +225,19 @@
     </style>
 </head>
 <body>
-    <header>
+      <header>
         <div class="container">
             <div class="logo">Travel Blog</div>
             <nav>
                 <ul>
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="about.html">About</a></li>
-                    <li><a href="contact.html">Contact</a></li>
+                    <li><a href="/profile">Home</a></li>
+                    <li><a href="/register">Register</a></li>
+                    {{if .User}}
+                        <li><a href="/profile">Profile</a></li>
+                        <li><a href="/logout">Logout</a></li>
+                    {{else}}
+                        <li><a href="/login">Login</a></li>
+                    {{end}}
                 </ul>
             </nav>
         </div>
@@ -242,30 +247,17 @@
         <div class="container">
             <h1>Welcome to My Travel Blog</h1>
             <div class="posts">
+                {{range .Posts}}
                 <div class="post">
-                    <img src="images/post1.jpg" alt="Travel destination">
                     <div class="post-content">
-                        <h2>Beautiful Mountains</h2>
-                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in dui mauris.</p>
-                        <a href="#" class="read-more">Read More →</a>
+                        <h2>Post by {{.Author}}</h2>
+                        <p>{{.Content}}</p>
+                        <small>Posted on: {{.CreatedAt}}</small>
                     </div>
                 </div>
-                <div class="post">
-                    <img src="images/post2.jpg" alt="Travel destination">
-                    <div class="post-content">
-                        <h2>City Adventures</h2>
-                        <p>Vivamus luctus urna sed urna ultricies ac tempor dui sagittis.</p>
-                        <a href="#" class="read-more">Read More →</a>
-                    </div>
-                </div>
-                <div class="post">
-                    <img src="images/post3.jpg" alt="Travel destination">
-                    <div class="post-content">
-                        <h2>Ocean Paradise</h2>
-                        <p>Praesent commodo cursus magna, vel scelerisque nisl consectetur et.</p>
-                        <a href="#" class="read-more">Read More →</a>
-                    </div>
-                </div>
+                {{else}}
+                <p>No posts available yet.</p>
+                {{end}}
             </div>
         </div>
     </main>

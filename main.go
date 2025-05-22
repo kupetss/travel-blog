@@ -60,9 +60,9 @@ func main() {
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	user, _ := getUser(r)
 
-	rows, err := db.Query("SELECT author, content, created_at FROM posts ORDER BY created_at DESC")
+	rows, err := db.Query("SELECT id, author, content, created_at FROM posts ORDER BY created_at DESC")
 	if err != nil {
-		http.Error(w, "Error loading posts", 500)
+		http.Error(w, "Error loading posts", http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
@@ -70,14 +70,26 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	var posts []Post
 	for rows.Next() {
 		var post Post
-		rows.Scan(&post.Author, &post.Content, &post.CreatedAt)
+		err := rows.Scan(&post.ID, &post.Author, &post.Content, &post.CreatedAt)
+		if err != nil {
+			http.Error(w, "Error reading posts", http.StatusInternalServerError)
+			return
+		}
 		posts = append(posts, post)
 	}
 
-	templates.ExecuteTemplate(w, "index.html", map[string]any{
+	if err = rows.Err(); err != nil {
+		http.Error(w, "Error processing posts", http.StatusInternalServerError)
+		return
+	}
+
+	err = templates.ExecuteTemplate(w, "index.html", map[string]interface{}{
 		"Posts": posts,
 		"User":  user,
 	})
+	if err != nil {
+		http.Error(w, "Error rendering template", http.StatusInternalServerError)
+	}
 }
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
