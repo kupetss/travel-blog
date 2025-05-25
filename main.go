@@ -53,7 +53,6 @@ func main() {
 	startServer()
 }
 
-// Инициализация БД
 func initDatabase() {
 	var err error
 	db, err = sql.Open("sqlite", "file:blog.db?_pragma=foreign_keys(1)&_time_format=sqlite")
@@ -65,7 +64,6 @@ func initDatabase() {
 		log.Fatal("Database connection failed:", err)
 	}
 
-	// Для разработки - очищаем старые таблицы
 	if os.Getenv("APP_ENV") == "development" {
 		_, _ = db.Exec("DROP TABLE IF EXISTS comments")
 		_, _ = db.Exec("DROP TABLE IF EXISTS posts")
@@ -93,7 +91,6 @@ func deletePostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Проверяем, что пост принадлежит текущему пользователю
 	var author string
 	err := db.QueryRow("SELECT author FROM posts WHERE id = ?", postID).Scan(&author)
 	if err != nil {
@@ -106,7 +103,6 @@ func deletePostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Удаляем пост (внешний ключ каскадно удалит комментарии)
 	_, err = db.Exec("DELETE FROM posts WHERE id = ?", postID)
 	if err != nil {
 		http.Error(w, "Error deleting post", http.StatusInternalServerError)
@@ -148,9 +144,7 @@ func createTables() {
 	log.Println("[DB] Tables created/verified")
 }
 
-// Запуск сервера
 func startServer() {
-	// Создаем необходимые директории
 	if err := os.MkdirAll("static/uploads", 0755); err != nil {
 		log.Fatal("Failed to create uploads directory:", err)
 	}
@@ -177,7 +171,6 @@ func startServer() {
 	log.Fatal(server.ListenAndServe())
 }
 
-// Обработчики маршрутов
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	user := getCurrentUser(r)
 
@@ -255,7 +248,6 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 		switch {
 		case err == sql.ErrNoRows:
-			// Автоматическая регистрация
 			if _, err := db.Exec(
 				"INSERT INTO users (username, password) VALUES (?, ?)",
 				username, password,
@@ -326,8 +318,7 @@ func createPostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Обработка формы
-	if err := r.ParseMultipartForm(20 << 20); err != nil { // 20MB max
+	if err := r.ParseMultipartForm(20 << 20); err != nil {
 		http.Error(w, "File too large or form error", http.StatusBadRequest)
 		return
 	}
@@ -391,7 +382,6 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-// Вспомогательные функции
 func getPosts() ([]Post, error) {
 	rows, err := db.Query(`
 		SELECT id, author, content, image_path, created_at 
@@ -411,7 +401,6 @@ func getPosts() ([]Post, error) {
 			return nil, err
 		}
 
-		// Парсим время из базы данных
 		if t, err := parseDatabaseTime(createdAt); err == nil {
 			p.CreatedAt = t
 		}
@@ -453,13 +442,11 @@ func getCommentsForPosts(posts []Post) (map[int][]Comment, error) {
 		return nil, nil
 	}
 
-	// Собираем ID постов
 	var postIDs []interface{}
 	for _, p := range posts {
 		postIDs = append(postIDs, p.ID)
 	}
 
-	// Формируем запрос с динамическим количеством параметров
 	query := `
 		SELECT id, post_id, author, content, created_at 
 		FROM comments 
@@ -524,7 +511,6 @@ func saveUploadedFile(r *http.Request, username string) (string, error) {
 	}
 	defer file.Close()
 
-	// Проверка типа файла
 	buff := make([]byte, 512)
 	if _, err = file.Read(buff); err != nil {
 		return "", err
@@ -534,17 +520,14 @@ func saveUploadedFile(r *http.Request, username string) (string, error) {
 		return "", fmt.Errorf("only image files are allowed")
 	}
 
-	// Возвращаем курсор в начало файла
 	if _, err = file.Seek(0, io.SeekStart); err != nil {
 		return "", err
 	}
 
-	// Создаем уникальное имя файла
 	ext := path.Ext(header.Filename)
 	filename := fmt.Sprintf("%s_%d%s", username, time.Now().UnixNano(), ext)
 	filePath := path.Join("uploads", filename)
 
-	// Сохраняем файл
 	dst, err := os.Create(path.Join("static", filePath))
 	if err != nil {
 		return "", err
@@ -573,7 +556,6 @@ func setSessionCookie(w http.ResponseWriter, username string) {
 		Path:     "/",
 		HttpOnly: true,
 		SameSite: http.SameSiteStrictMode,
-		// Secure: true, // Включить для HTTPS
 	})
 }
 
@@ -584,7 +566,6 @@ func renderTemplate(w http.ResponseWriter, name string, data interface{}) {
 	}
 }
 
-// Функции для работы с датами
 func parseDatabaseTime(timeStr string) (time.Time, error) {
 	layouts := []string{
 		"2006-01-02 15:04:05",
